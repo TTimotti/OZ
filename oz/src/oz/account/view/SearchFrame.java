@@ -5,6 +5,7 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableRowSorter;
 
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
@@ -95,58 +95,6 @@ public class SearchFrame extends JFrame {
         DefaultComboBoxModel<String> accountComboBoxModel = new DefaultComboBoxModel<>(accNameArr);
         comboBoxAccountList.setModel(accountComboBoxModel);
 
-    }
-
-    private void initializeTable() {
-        model = new DefaultTableModel(null, colMain);
-        tableResult.setModel(model);
-        List<Spend> spendList = dao.readAllSpend();
-        List<Import> importList = dao.readAllImport();
-        List<Transfer> transferList = dao.readAllTransfer();
-        for (Spend l : spendList) {
-
-            Object[] row = {
-                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                    l.getAccountName(), "지출", l.getCost(), l.getExpense() };
-            model.addRow(row);
-        }
-        for (Import l : importList) {
-            Object[] row = {
-                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                    l.getAccountName(), "수입", l.getCost(), l.getIncome() };
-            model.addRow(row);
-        }
-        for (Transfer l : transferList) {
-            Object[] row = {
-                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                    l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                    l.getMemo() };
-            Object[] row2 = {
-                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                    l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-            model.addRow(row);
-            model.addRow(row2);
-        }
-//        tableResult.setRowSorter(new TableRowSorter<>(model));
-//      LocalDateTime.parse(payDate.toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-//      LocalDateTime.parse(payDate.toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-        tableResult.getColumn("등록 날짜").setPreferredWidth(60);
-        tableResult.getColumn("계좌 이름").setPreferredWidth(35);
-        tableResult.getColumn("수입/지출/자금이동").setPreferredWidth(40);
-        tableResult.getColumn("금 액").setPreferredWidth(35);
-        tableResult.getColumn("항 목").setPreferredWidth(35);
-        dtcr = new DefaultTableCellRenderer();
-        dtcr.setHorizontalAlignment(SwingConstants.CENTER);
-        TableColumnModel tcm = tableResult.getColumnModel();
-        tcm.getColumn(0).setCellRenderer(dtcr);
-        tcm.getColumn(1).setCellRenderer(dtcr);
-        tcm.getColumn(2).setCellRenderer(dtcr);
-        tcm.getColumn(4).setCellRenderer(dtcr);
-        dtcr2 = new DefaultTableCellRenderer();
-        dtcr2.setHorizontalAlignment(SwingConstants.RIGHT);
-        tcm = tableResult.getColumnModel();
-        tcm.getColumn(3).setCellRenderer(dtcr2);
     }
 
     public void initialize() {
@@ -219,6 +167,7 @@ public class SearchFrame extends JFrame {
         tableResult = new JTable();
         tableResult.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
         tableResult.setAutoCreateRowSorter(true);
+        // FIXME 가능하다면 기본적으로 날짜 순으로 정렬되게끔.. 일단은 sql로 정렬.
         scrollPane.setViewportView(tableResult);
 
         model = new DefaultTableModel(null, colMain);
@@ -233,73 +182,54 @@ public class SearchFrame extends JFrame {
         chckbxAllAccounts.setBounds(323, 71, 91, 23);
         contentPane.add(chckbxAllAccounts);
 
-//        String category = null;
-//        String detail = null;
-
-//        List<OzPay> list = dao.readHistory();
-//        for (OzPay o : list) {
-//            if (o.getTransfer() != null && o.getExpenseName() == null) {
-//                category = "송금 완료";
-//                detail = o.getTransfer();
-//            } else if (o.getTransfer() != null && o.getIncomeName() == null) {
-//                category = "내 계좌로 송금";
-//                detail = o.getTransfer();
-//            } else if (o.getExpenseName() != null) {
-//
-//                category = "지출";
-//                detail = o.getExpenseName();
-//            } else if (o.getIncomeName() != null) {
-//                category = "수입";
-//                detail = o.getIncomeName();
-//            }
-//
-//            Object[] row = {
-//                    LocalDateTime.parse(o.getPayDate().toString())
-//                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
-//                    o.getAccName(), category, o.getCost(), detail };
-//            model.addRow(row);
-//            tableResult.getColumn("등록 날짜").setPreferredWidth(60);
-//            tableResult.getColumn("계좌 이름").setPreferredWidth(35);
-//            tableResult.getColumn("수입/지출/자금이동").setPreferredWidth(40);
-//            tableResult.getColumn("금 액").setPreferredWidth(35);
-//            tableResult.getColumn("항 목").setPreferredWidth(35);
-//            dtcr = new DefaultTableCellRenderer();
-//            dtcr.setHorizontalAlignment(SwingConstants.CENTER);
-//            TableColumnModel tcm = tableResult.getColumnModel();
-//            tcm.getColumn(0).setCellRenderer(dtcr);
-//            tcm.getColumn(1).setCellRenderer(dtcr);
-//            tcm.getColumn(2).setCellRenderer(dtcr);
-//            tcm.getColumn(4).setCellRenderer(dtcr);
-//            dtcr2 = new DefaultTableCellRenderer();
-//            dtcr2.setHorizontalAlignment(SwingConstants.RIGHT);
-//            tcm = tableResult.getColumnModel();
-//            tcm.getColumn(3).setCellRenderer(dtcr2);
-//        }
-
     }
 
     private void search() {
-        boolean readAllAcc = chckbxAllAccounts.isSelected();
-        if (readAllAcc) {
-            search_2();
-        } else {
-            search_1();
-        }
 
-    }
+        LocalDateTime selectedDate = new java.sql.Timestamp(utilDateModel.getValue().getTime()).toLocalDateTime();
+        String date = selectedDate.format(DateTimeFormatter.ofPattern("yy-MM-dd"));
 
-    private void search_2() {
         boolean income = chckbxIncome.isSelected();
         boolean expense = chckbxExpense.isSelected();
         boolean transfer = chckbxTransfer.isSelected();
+        boolean allAccounts = chckbxAllAccounts.isSelected();
 
+        String account = comboBoxAccountList.getSelectedItem().toString();
         List<Spend> spendList = dao.readAllSpend();
         List<Import> importList = dao.readAllImport();
         List<Transfer> transferList = dao.readAllTransfer();
 
-        if (income) {
+        model = new DefaultTableModel(null, colMain);
+        tableResult.setModel(model);
+        tableResult.getColumn("등록 날짜").setPreferredWidth(60);
+        tableResult.getColumn("계좌 이름").setPreferredWidth(35);
+        tableResult.getColumn("수입/지출/자금이동").setPreferredWidth(40);
+        tableResult.getColumn("금 액").setPreferredWidth(35);
+        tableResult.getColumn("항 목").setPreferredWidth(35);
+        dtcr = new DefaultTableCellRenderer();
+        dtcr.setHorizontalAlignment(SwingConstants.CENTER);
+        TableColumnModel tcm = tableResult.getColumnModel();
+        tcm.getColumn(0).setCellRenderer(dtcr);
+        tcm.getColumn(1).setCellRenderer(dtcr);
+        tcm.getColumn(2).setCellRenderer(dtcr);
+        tcm.getColumn(4).setCellRenderer(dtcr);
+        dtcr2 = new DefaultTableCellRenderer();
+        dtcr2.setHorizontalAlignment(SwingConstants.RIGHT);
+        tcm = tableResult.getColumnModel();
+        tcm.getColumn(3).setCellRenderer(dtcr2);
+
+        if (allAccounts) {
+            for (Spend l : spendList) {
+                if (l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date) && expense) {
+                    Object[] row = {
+                            LocalDateTime.parse(l.getPayDate().toString())
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            l.getAccountName(), "지출", l.getCost(), l.getExpense() };
+                    model.addRow(row);
+                }
+            }
             for (Import l : importList) {
-                if (l.getAccountName().equals(comboBoxAccountList.getSelectedItem().toString())) {
+                if (l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date) && income) {
                     Object[] row = {
                             LocalDateTime.parse(l.getPayDate().toString())
                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
@@ -307,58 +237,26 @@ public class SearchFrame extends JFrame {
                     model.addRow(row);
                 }
             }
-            if (expense) {
-                for (Spend l : spendList) {
-                    if (l.getAccountName().equals(comboBoxAccountList.getSelectedItem().toString())) {
-                        Object[] row = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getAccountName(), "지출", l.getCost(), l.getExpense() };
-                        model.addRow(row);
-                    }
-                }
-                if (transfer) {
-                    for (Transfer l : transferList) {
-                        if (l.getSendAccountName().equals(comboBoxAccountList.getSelectedItem().toString()) || (l
-                                .getReceiveAccountName().equals(comboBoxAccountList.getSelectedItem().toString()))) {
-                            Object[] row = {
-                                    LocalDateTime.parse(l.getPayDate().toString())
-                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                    l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동",
-                                    "- " + l.getCash(), l.getMemo() };
-                            Object[] row2 = {
-                                    LocalDateTime.parse(l.getPayDate().toString())
-                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                    l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                            model.addRow(row);
-                            model.addRow(row2);
-                        }
-                    }
-                }
-
-            }
-            if (transfer) {
-                for (Transfer l : transferList) {
-                    if (l.getSendAccountName().equals(comboBoxAccountList.getSelectedItem().toString())
-                            || (l.getReceiveAccountName().equals(comboBoxAccountList.getSelectedItem().toString()))) {
-                        Object[] row = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                                l.getMemo() };
-                        Object[] row2 = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                        model.addRow(row);
-                        model.addRow(row2);
-                    }
+            for (Transfer l : transferList) {
+                if (l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date) && transfer) {
+                    Object[] row = {
+                            LocalDateTime.parse(l.getPayDate().toString())
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            l.getSendAccountName(), "자금이동↓", "- " + l.getCash(),
+                            l.getMemo() };
+                    Object[] row2 = {
+                            LocalDateTime.parse(l.getPayDate().toString())
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            l.getReceiveAccountName(), "└입금", l.getCash(), l.getMemo() };
+                    model.addRow(row);
+                    model.addRow(row2);
                 }
             }
-        } else if (expense) {
+        } else {
             for (Spend l : spendList) {
-                if (l.getAccountName().equals(comboBoxAccountList.getSelectedItem().toString())) {
 
+                if (l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date)
+                        && l.getAccountName().equals(comboBoxAccountList.getSelectedItem().toString()) && expense) {
                     Object[] row = {
                             LocalDateTime.parse(l.getPayDate().toString())
                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
@@ -366,37 +264,30 @@ public class SearchFrame extends JFrame {
                     model.addRow(row);
                 }
             }
-            if (transfer) {
-                for (Transfer l : transferList) {
-                    if (l.getSendAccountName().equals(comboBoxAccountList.getSelectedItem().toString())
-                            || (l.getReceiveAccountName().equals(comboBoxAccountList.getSelectedItem().toString()))) {
-                        Object[] row = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                                l.getMemo() };
-                        Object[] row2 = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                        model.addRow(row);
-                        model.addRow(row2);
-                    }
-                }
-            }
-        } else if (transfer) {
-            for (Transfer l : transferList) {
-                if (l.getSendAccountName().equals(comboBoxAccountList.getSelectedItem().toString())
-                        || (l.getReceiveAccountName().equals(comboBoxAccountList.getSelectedItem().toString()))) {
+            for (Import l : importList) {
+                if (l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date)
+                        && l.getAccountName().equals(comboBoxAccountList.getSelectedItem().toString()) && income) {
                     Object[] row = {
                             LocalDateTime.parse(l.getPayDate().toString())
                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
+                            l.getAccountName(), "수입", l.getCost(), l.getIncome() };
+                    model.addRow(row);
+                }
+            }
+            for (Transfer l : transferList) {
+                if ((l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date)
+                        && l.getSendAccountName().equals(comboBoxAccountList.getSelectedItem().toString())) && transfer
+                        || (l.getPayDate().format(DateTimeFormatter.ofPattern("yy-MM-dd")).equals(date)
+                                && l.getReceiveAccountName().equals(comboBoxAccountList.getSelectedItem().toString())) && transfer) {
+                    Object[] row = {
+                            LocalDateTime.parse(l.getPayDate().toString())
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            l.getSendAccountName(), "자금이동↓", "- " + l.getCash(),
                             l.getMemo() };
                     Object[] row2 = {
                             LocalDateTime.parse(l.getPayDate().toString())
                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
+                            l.getReceiveAccountName(), "└입금", l.getCash(), l.getMemo() };
                     model.addRow(row);
                     model.addRow(row2);
                 }
@@ -405,104 +296,58 @@ public class SearchFrame extends JFrame {
 
     }
 
-    private void search_1() {
-        boolean income = chckbxIncome.isSelected();
-        boolean expense = chckbxExpense.isSelected();
-        boolean transfer = chckbxTransfer.isSelected();
+    private void initializeTable() {
 
+        model = new DefaultTableModel(null, colMain);
+        tableResult.setModel(model);
         List<Spend> spendList = dao.readAllSpend();
         List<Import> importList = dao.readAllImport();
         List<Transfer> transferList = dao.readAllTransfer();
+        for (Spend l : spendList) {
 
-        if (income) {
-            for (Import l : importList) {
-                Object[] row = {
-                        LocalDateTime.parse(l.getPayDate().toString())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        l.getAccountName(), "수입", l.getCost(), l.getIncome() };
-                model.addRow(row);
-            }
-            if (expense) {
-                for (Spend l : spendList) {
-
-                    Object[] row = {
-                            LocalDateTime.parse(l.getPayDate().toString())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getAccountName(), "지출", l.getCost(), l.getExpense() };
-                    model.addRow(row);
-                }
-                if (transfer) {
-                    for (Transfer l : transferList) {
-                        Object[] row = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                                l.getMemo() };
-                        Object[] row2 = {
-                                LocalDateTime.parse(l.getPayDate().toString())
-                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                        model.addRow(row);
-                        model.addRow(row2);
-                    }
-                }
-
-            }
-            if (transfer) {
-                for (Transfer l : transferList) {
-                    Object[] row = {
-                            LocalDateTime.parse(l.getPayDate().toString())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                            l.getMemo() };
-                    Object[] row2 = {
-                            LocalDateTime.parse(l.getPayDate().toString())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                    model.addRow(row);
-                    model.addRow(row2);
-                }
-            }
-        } else if (expense) {
-            for (Spend l : spendList) {
-
-                Object[] row = {
-                        LocalDateTime.parse(l.getPayDate().toString())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        l.getAccountName(), "지출", l.getCost(), l.getExpense() };
-                model.addRow(row);
-            }
-            if (transfer) {
-                for (Transfer l : transferList) {
-                    Object[] row = {
-                            LocalDateTime.parse(l.getPayDate().toString())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                            l.getMemo() };
-                    Object[] row2 = {
-                            LocalDateTime.parse(l.getPayDate().toString())
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                            l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                    model.addRow(row);
-                    model.addRow(row2);
-                }
-            }
-        } else if (transfer) {
-            for (Transfer l : transferList) {
-                Object[] row = {
-                        LocalDateTime.parse(l.getPayDate().toString())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        l.getSendAccountName() + " → " + l.getReceiveAccountName(), "자금이동", "- " + l.getCash(),
-                        l.getMemo() };
-                Object[] row2 = {
-                        LocalDateTime.parse(l.getPayDate().toString())
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        l.getReceiveAccountName(), "입금", l.getCash(), l.getMemo() };
-                model.addRow(row);
-                model.addRow(row2);
-            }
+            Object[] row = {
+                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    l.getAccountName(), "지출", l.getCost(), l.getExpense() };
+            model.addRow(row);
+        }
+        for (Import l : importList) {
+            Object[] row = {
+                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    l.getAccountName(), "수입", l.getCost(), l.getIncome() };
+            model.addRow(row);
+        }
+        for (Transfer l : transferList) {
+            Object[] row = {
+                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    l.getSendAccountName(), "자금이동↓", "- " + l.getCash(),
+                    l.getMemo() };
+            Object[] row2 = {
+                    LocalDateTime.parse(l.getPayDate().toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    l.getReceiveAccountName(), "└입금", l.getCash(), l.getMemo() };
+            model.addRow(row);
+            model.addRow(row2);
         }
 
+//        tableResult.setRowSorter(new TableRowSorter<>(model));
+//      LocalDateTime.parse(payDate.toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+//      LocalDateTime.parse(payDate.toString()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        tableResult.getColumn("등록 날짜").setPreferredWidth(60);
+        tableResult.getColumn("계좌 이름").setPreferredWidth(35);
+        tableResult.getColumn("수입/지출/자금이동").setPreferredWidth(40);
+        tableResult.getColumn("금 액").setPreferredWidth(35);
+        tableResult.getColumn("항 목").setPreferredWidth(35);
+        dtcr = new DefaultTableCellRenderer();
+        dtcr.setHorizontalAlignment(SwingConstants.CENTER);
+        TableColumnModel tcm = tableResult.getColumnModel();
+        tcm.getColumn(0).setCellRenderer(dtcr);
+        tcm.getColumn(1).setCellRenderer(dtcr);
+        tcm.getColumn(2).setCellRenderer(dtcr);
+        tcm.getColumn(4).setCellRenderer(dtcr);
+        dtcr2 = new DefaultTableCellRenderer();
+        dtcr2.setHorizontalAlignment(SwingConstants.RIGHT);
+        tcm = tableResult.getColumnModel();
+        tcm.getColumn(3).setCellRenderer(dtcr2);
     }
 
 }
